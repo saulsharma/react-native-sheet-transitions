@@ -6,8 +6,8 @@ const workspaceRoot = path.resolve(projectRoot, '..')
 
 const config = getDefaultConfig(projectRoot)
 
-// Watch all files in the workspace
-config.watchFolders = [workspaceRoot]
+// Watch the parent's src directory only
+config.watchFolders = [path.resolve(workspaceRoot, 'src')]
 
 // Let Metro know where to resolve packages
 config.resolver.nodeModulesPaths = [
@@ -19,5 +19,11 @@ config.resolver.nodeModulesPaths = [
 config.resolver.extraNodeModules = {
   'react-native-sheet-transitions': path.resolve(workspaceRoot, 'src'),
 }
+
+// Exclude problematic paths
+config.resolver.blockList = [
+  // Exclude example folder from parent to prevent circular references
+  /\/example\/.*/,
+]
 
 module.exports = config
