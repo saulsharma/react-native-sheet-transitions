@@ -1,9 +1,5 @@
 import type { ViewStyle } from 'react-native'
-import type { 
-  WithSpringConfig,
-  AnimatedStyleProp,
-  ReduceMotion 
-} from 'react-native-reanimated'
+import type { WithSpringConfig, AnimatedStyle } from 'react-native-reanimated'
 
 export type SpringConfig = WithSpringConfig
 
@@ -29,10 +25,10 @@ export interface SheetScreenProps {
   dragThreshold?: number
   springConfig?: SpringConfig
   dragDirections?: DragDirections
-  style?: AnimatedStyleProp<ViewStyle>
+  style?: AnimatedStyle<ViewStyle>
   opacityOnGestureMove?: boolean
   containerRadiusSync?: boolean
   initialBorderRadius?: number
   disableSyncScaleOnDragDown?: boolean
   customBackground?: React.ReactNode
-} 
+}

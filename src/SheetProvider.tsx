@@ -1,15 +1,15 @@
 import React, { createContext, useContext, useCallback, useEffect } from 'react'
-import { Platform, View } from 'react-native'
+import { Platform } from 'react-native'
 import Animated, {
   useSharedValue,
   withSpring,
   useAnimatedStyle,
   cancelAnimation,
-  runOnJS
+  SharedValue,
 } from 'react-native-reanimated'
 
 interface SheetContextType {
-  scale: Animated.SharedValue<number>
+  scale: SharedValue<number>
   setScale: (scale: number) => void
   resizeType: 'incremental' | 'decremental'
   enableForWeb: boolean
@@ -26,7 +26,7 @@ const SheetContext = createContext<SheetContextType | null>(null)
 export function SheetProvider({
   children,
   resizeType = 'decremental',
-  enableForWeb = false
+  enableForWeb = false,
 }: SheetProviderProps) {
   const scale = useSharedValue(1)
   const isMounted = useSharedValue(false)
@@ -55,8 +55,6 @@ export function SheetProvider({
       damping: 20,
       stiffness: 300,
       mass: 0.3,
-      restDisplacementThreshold: 0.01,
-      restSpeedThreshold: 0.01,
     })
   }, [])
 
@@ -71,12 +69,14 @@ export function SheetProvider({
   const isEnabled = Platform.OS === 'web' ? enableForWeb : true
 
   return (
-    <SheetContext.Provider value={{
-      scale,
-      setScale,
-      resizeType,
-      enableForWeb: isEnabled
-    }}>
+    <SheetContext.Provider
+      value={{
+        scale,
+        setScale,
+        resizeType,
+        enableForWeb: isEnabled,
+      }}
+    >
       {/* <View style={{ flex: 1, backgroundColor: 'red',
           position: 'absolute',
           top: 0,
@@ -92,15 +92,12 @@ export function SheetProvider({
             flex: 1,
             backfaceVisibility: 'hidden',
           },
-          Platform.OS === 'ios' ? animatedStyle : null
+          Platform.OS === 'ios' ? animatedStyle : null,
         ]}
         collapsable={false}
       >
-
         {children}
-
       </Animated.View>
-
     </SheetContext.Provider>
   )
 }
@@ -111,4 +108,4 @@ export function useSheet() {
     throw new Error('useSheet must be used within a SheetProvider')
   }
   return context
-} 
+}

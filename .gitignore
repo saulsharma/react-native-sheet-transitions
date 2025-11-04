@@ -1,9 +1,41 @@
+# Dependencies
 node_modules/
-/dist
+.pnp
+.pnp.js
+
+# Build output
 dist/
-.DS_Store
-*.log
-coverage/
-.env
 build/
 lib/
+
+# Testing
+coverage/
+*.log
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Local env files
+.env
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Bun
+bun.lockb
+
+# Expo
+example/.expo/
+example/dist/
+example/.expo-shared/
+
+# Husky
+.husky/_

@@ -1,10 +1,6 @@
-import React, { useRef } from 'react'
+import React from 'react'
 import { GestureDetector, Gesture } from 'react-native-gesture-handler'
-import Animated, {
-  useSharedValue,
-  runOnJS,
-  WithSpringConfig,
-} from 'react-native-reanimated'
+import Animated, { useSharedValue, runOnJS } from 'react-native-reanimated'
 
 interface ScrollState {
   isAtTop: boolean
@@ -43,7 +39,7 @@ export const ScrollHandler = React.forwardRef<Animated.ScrollView, Props>((props
           isAtTop: scrollY.value <= 0,
           isAtBottom: false,
           scrollY: scrollY.value,
-          velocity: 0
+          velocity: 0,
         })
       }
     })
@@ -60,17 +56,17 @@ export const ScrollHandler = React.forwardRef<Animated.ScrollView, Props>((props
         ref={ref}
         style={style}
         scrollEventThrottle={16}
-        onScroll={(event) => {
+        onScroll={event => {
           'worklet'
           const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent
           scrollY.value = contentOffset.y
-          
+
           if (!isDragging.value) {
             handleScrollStateChange({
               isAtTop: contentOffset.y <= 0,
-              isAtBottom: contentOffset.y >= (contentSize.height - layoutMeasurement.height),
+              isAtBottom: contentOffset.y >= contentSize.height - layoutMeasurement.height,
               scrollY: contentOffset.y,
-              velocity: 0
+              velocity: 0,
             })
           }
         }}
@@ -80,4 +76,6 @@ export const ScrollHandler = React.forwardRef<Animated.ScrollView, Props>((props
       </Animated.ScrollView>
     </GestureDetector>
   )
-}) 
+})
+
+ScrollHandler.displayName = 'ScrollHandler'

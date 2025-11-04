@@ -15,7 +15,6 @@ Beautiful iOS-like sheet transitions for React Native, Expo Go, and Web. Provide
 - 🔍 Opacity animations
 - 📐 Multi-directional dragging support
 
-
 > ⚠️ **Work in Progress**: This package is under active development and not yet recommended for production use. Breaking changes may occur frequently. Feel free to contribute by submitting PRs or reporting issues!
 
 ## Installation 📦
@@ -57,9 +56,9 @@ import { SheetScreen } from 'react-native-sheet-transitions'
 
 export default function ModalScreen() {
   const router = useRouter()
-  
+
   return (
-    <SheetScreen 
+    <SheetScreen
       onClose={() => router.back()}
       dragDirections={{ toBottom: true }}
       opacityOnGestureMove={true}
@@ -75,35 +74,35 @@ export default function ModalScreen() {
 
 ### SheetProvider Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `springConfig` | `SpringConfig` | `{ damping: 15, stiffness: 150, mass: 0.5 }` | Spring animation configuration |
-| `resizeType` | `'incremental' \| 'decremental'` | `'decremental'` | Scale animation mode |
-| `enableForWeb` | `boolean` | `false` | Enable animations on web platform (not recommended) |
+| Prop           | Type                             | Default                                      | Description                                         |
+| -------------- | -------------------------------- | -------------------------------------------- | --------------------------------------------------- |
+| `springConfig` | `SpringConfig`                   | `{ damping: 15, stiffness: 150, mass: 0.5 }` | Spring animation configuration                      |
+| `resizeType`   | `'incremental' \| 'decremental'` | `'decremental'`                              | Scale animation mode                                |
+| `enableForWeb` | `boolean`                        | `false`                                      | Enable animations on web platform (not recommended) |
 
 ### SheetScreen Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `onClose` | `() => void` | required | Callback when sheet is dismissed |
-| `scaleFactor` | `number` | `0.83` | Scale factor for background content |
-| `dragThreshold` | `number` | `150` | Distance required to trigger dismiss |
-| `springConfig` | `SpringConfig` | `{ damping: 15, stiffness: 60, mass: 0.6, restDisplacementThreshold: 0.01, restSpeedThreshold: 0.01 }` | Spring animation config |
-| `dragDirections` | `DragDirections` | `{ toBottom: true }` | Enabled drag directions |
-| `isScrollable` | `boolean` | `false` | Enable scroll handling for content |
-| `opacityOnGestureMove` | `boolean` | `false` | Enable opacity animation during drag |
-| `containerRadiusSync` | `boolean` | `true` | Sync border radius with drag |
-| `initialBorderRadius` | `number` | `50` | Initial border radius value |
-| `style` | `ViewStyle` | undefined | Additional container styles |
-| `disableSyncScaleOnDragDown` | `boolean` | `false` | Disable scale sync during drag |
-| `customBackground` | `ReactNode` | undefined | Custom background component with fade animation |
-| `onOpenStart` | `() => void` | undefined | Called when sheet starts opening animation |
-| `onOpenEnd` | `() => void` | undefined | Called when sheet opening animation completes |
-| `onCloseStart` | `() => void` | undefined | Called when user gesture triggers close |
-| `onCloseEnd` | `() => void` | undefined | Called when close animation completes (replaces onClose if provided) |
-| `onBelowThreshold` | `() => void` | undefined | Called when drag goes below threshold after exceeding it |
-| `disableRootScale` | `boolean` | `false` | Disable background scaling effect |
-| `disableSheetContentResizeOnDragDown` | `boolean` | `false` | Disable sheet content scaling during drag down |
+| Prop                                  | Type             | Default                                                                                                | Description                                                          |
+| ------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------- |
+| `onClose`                             | `() => void`     | required                                                                                               | Callback when sheet is dismissed                                     |
+| `scaleFactor`                         | `number`         | `0.83`                                                                                                 | Scale factor for background content                                  |
+| `dragThreshold`                       | `number`         | `150`                                                                                                  | Distance required to trigger dismiss                                 |
+| `springConfig`                        | `SpringConfig`   | `{ damping: 15, stiffness: 60, mass: 0.6, restDisplacementThreshold: 0.01, restSpeedThreshold: 0.01 }` | Spring animation config                                              |
+| `dragDirections`                      | `DragDirections` | `{ toBottom: true }`                                                                                   | Enabled drag directions                                              |
+| `isScrollable`                        | `boolean`        | `false`                                                                                                | Enable scroll handling for content                                   |
+| `opacityOnGestureMove`                | `boolean`        | `false`                                                                                                | Enable opacity animation during drag                                 |
+| `containerRadiusSync`                 | `boolean`        | `true`                                                                                                 | Sync border radius with drag                                         |
+| `initialBorderRadius`                 | `number`         | `50`                                                                                                   | Initial border radius value                                          |
+| `style`                               | `ViewStyle`      | undefined                                                                                              | Additional container styles                                          |
+| `disableSyncScaleOnDragDown`          | `boolean`        | `false`                                                                                                | Disable scale sync during drag                                       |
+| `customBackground`                    | `ReactNode`      | undefined                                                                                              | Custom background component with fade animation                      |
+| `onOpenStart`                         | `() => void`     | undefined                                                                                              | Called when sheet starts opening animation                           |
+| `onOpenEnd`                           | `() => void`     | undefined                                                                                              | Called when sheet opening animation completes                        |
+| `onCloseStart`                        | `() => void`     | undefined                                                                                              | Called when user gesture triggers close                              |
+| `onCloseEnd`                          | `() => void`     | undefined                                                                                              | Called when close animation completes (replaces onClose if provided) |
+| `onBelowThreshold`                    | `() => void`     | undefined                                                                                              | Called when drag goes below threshold after exceeding it             |
+| `disableRootScale`                    | `boolean`        | `false`                                                                                                | Disable background scaling effect                                    |
+| `disableSheetContentResizeOnDragDown` | `boolean`        | `false`                                                                                                | Disable sheet content scaling during drag down                       |
 
 ### Types
 
@@ -138,11 +137,11 @@ Background scales up instead of down:
 ### Custom Animation Config
 
 ```tsx
-<SheetScreen 
+<SheetScreen
   springConfig={{
     damping: 15,
     stiffness: 120,
-    mass: 0.8
+    mass: 0.8,
   }}
   scaleFactor={0.85}
   dragThreshold={100}
@@ -157,11 +156,11 @@ Background scales up instead of down:
 ### Multi-directional Dragging
 
 ```tsx
-<SheetScreen 
+<SheetScreen
   dragDirections={{
     toBottom: true,
     toLeft: true,
-    toRight: true
+    toRight: true,
   }}
   onClose={handleClose}
 >
@@ -175,14 +174,8 @@ You can add a custom background component that fades in/out with the modal:
 
 ```tsx
 import { BlurView } from 'expo-blur'
-
-<SheetScreen 
-  customBackground={
-    <BlurView 
-      intensity={20} 
-      style={StyleSheet.absoluteFill}
-    />
-  }
+;<SheetScreen
+  customBackground={<BlurView intensity={20} style={StyleSheet.absoluteFill} />}
   onClose={handleClose}
 >
   <Content />
@@ -190,6 +183,7 @@ import { BlurView } from 'expo-blur'
 ```
 
 The background component will:
+
 - Fade in when modal opens
 - Fade out when modal closes
 - Be positioned absolutely behind the modal content
@@ -209,11 +203,11 @@ export default function Layout() {
     <SheetProvider>
       <Stack>
         <Stack.Screen name="index" />
-        <Stack.Screen 
-          name="modal" 
+        <Stack.Screen
+          name="modal"
           options={{
             presentation: 'transparentModal',
-            contentStyle: { backgroundColor: 'transparent' }
+            contentStyle: { backgroundColor: 'transparent' },
           }}
         />
       </Stack>
@@ -232,7 +226,6 @@ Pull requests are welcome! For major changes:
 4. Push to the branch
 5. Open a pull request
 
-
 ## Lifecycle Callbacks
 
 The SheetScreen component provides several callbacks for precise control:
@@ -241,16 +234,16 @@ The SheetScreen component provides several callbacks for precise control:
 interface SheetScreenProps {
   // Called when sheet starts opening animation
   onOpenStart?: () => void
-  
+
   // Called when sheet opening animation completes
   onOpenEnd?: () => void
-  
+
   // Called when user drags above threshold
   onCloseStart?: () => void
-  
+
   // Called when user drags below threshold
   onBelowThreshold?: () => void
-  
+
   // Called when close animation completes
   onCloseEnd?: () => void
 }
@@ -282,13 +275,14 @@ interface SheetScreenProps {
 ### Background Scaling
 
 The background scaling effect (where the previous screen scales down when the sheet opens) is:
+
 - ✅ Enabled by default on iOS
 - ❌ Disabled by default on Android and Web
 - Can be disabled on iOS using `disableRootScale={true}`
 
 ```tsx
-<SheetScreen 
-  disableRootScale={true}  // Disable background scaling even on iOS
+<SheetScreen
+  disableRootScale={true} // Disable background scaling even on iOS
   onClose={handleClose}
 >
   <Content />
@@ -308,6 +302,7 @@ If you need to enable animations on web:
 ```
 
 > **Note**: Enabling sheet transitions on web is not recommended as it can:
+>
 > - Interfere with native web accessibility features
 > - Create inconsistent UX across different browsers
 > - Impact performance on lower-end devices
@@ -318,6 +313,7 @@ If you need to enable animations on web:
 ## Roadmap 🗺️
 
 ### High Priority
+
 - [ ] Fix Scrolling gesture handling and momentum issues
 - [ ] Multiple Portal support for nested sheets
 - [ ] iOS-like sheet detents (snap points)
@@ -328,6 +324,7 @@ If you need to enable animations on web:
   - Gesture-based snapping behavior
 
 ### Plans
+
 - [ ] Enhanced gesture controls
   - Velocity-based dismissal
   - Directional lock
@@ -340,7 +337,6 @@ If you need to enable animations on web:
 - [ ] Better web support
   - Keyboard navigation
   - Focus trapping
-
 
 ## License 📄
 
