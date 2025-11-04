@@ -53,16 +53,20 @@ dragDirections = {
     let _a, _b, _c;
     const { setScale, resizeType, enableForWeb, currentScale } = (0, SheetProvider_1.useSheet)();
     const reducedMotion = (0, utils_1.useReducedMotion)();
-    // Use adaptive threshold if not provided
+    // Pre-compute values that will be needed in worklets
     const effectiveThreshold = dragThreshold !== null && dragThreshold !== void 0 ? dragThreshold : constants_1.PHYSICS.ADAPTIVE_DRAG_THRESHOLD;
-    // Use optimized spring config based on motion preferences
+    const significantVelocityThreshold = constants_1.PHYSICS.SIGNIFICANT_VELOCITY;
+    const screenHeight = constants_1.SCREEN_SIZE.height;
+    const screenWidth = constants_1.SCREEN_SIZE.width;
+    const reducedMotionDuration = constants_1.PHYSICS.REDUCED_MOTION_DURATION;
+    const minOpacity = constants_1.ACCESSIBILITY.PREFER_CROSS_FADE_THRESHOLD;
+    // Pre-compute spring config
     const baseSpringConfig = springConfig !== null && springConfig !== void 0 ? springConfig : constants_1.PHYSICS.SPRING_CONFIGS.interactive;
     const effectiveSpringConfig = {
         damping: (_a = baseSpringConfig.damping) !== null && _a !== void 0 ? _a : 25,
         stiffness: (_b = baseSpringConfig.stiffness) !== null && _b !== void 0 ? _b : 350,
         mass: (_c = baseSpringConfig.mass) !== null && _c !== void 0 ? _c : 0.6,
     };
-    // Override with reduced motion config if needed
     const finalSpringConfig = reducedMotion
         ? constants_1.PHYSICS.SPRING_CONFIGS.reducedMotion
         : effectiveSpringConfig;
@@ -165,7 +169,7 @@ dragDirections = {
                     (0, react_native_reanimated_1.runOnJS)(onBelowThreshold)();
             }
         }
-        const progress = Math.min(translation / (effectiveDragDirections.toBottom ? constants_1.SCREEN_SIZE.height : constants_1.SCREEN_SIZE.width), 1);
+        const progress = Math.min(translation / (effectiveDragDirections.toBottom ? screenHeight : screenWidth), 1);
         if (!disableSyncScaleOnDragDown && shouldEnableScale) {
             const newScale = resizeType === 'incremental'
                 ? 1.15 - progress * 0.15
@@ -174,7 +178,7 @@ dragDirections = {
         }
         if (opacityOnGestureMove) {
             // Use 70% minimum opacity to maintain context (progressive disclosure best practice)
-            opacity.value = (0, react_native_reanimated_1.interpolate)(progress * constants_1.SCREEN_SIZE.height, [0, constants_1.SCREEN_SIZE.height * 0.5], [1, constants_1.ACCESSIBILITY.PREFER_CROSS_FADE_THRESHOLD], react_native_reanimated_1.Extrapolate.CLAMP);
+            opacity.value = (0, react_native_reanimated_1.interpolate)(progress * screenHeight, [0, screenHeight * 0.5], [1, minOpacity], react_native_reanimated_1.Extrapolate.CLAMP);
         }
     })
         .onEnd(event => {
@@ -196,31 +200,54 @@ dragDirections = {
             }
             return;
         }
-        // Use improved velocity-aware dismiss logic
+        // Calculate primary translation and velocity
         const primaryTranslation = effectiveDragDirections.toBottom || effectiveDragDirections.toTop
             ? Math.abs(translationY)
             : Math.abs(translationX);
         const primaryVelocity = effectiveDragDirections.toBottom || effectiveDragDirections.toTop
-            ? velocityY
-            : velocityX;
-        const shouldClose = (0, utils_1.shouldDismiss)(primaryTranslation, primaryVelocity, effectiveThreshold, constants_1.PHYSICS.SIGNIFICANT_VELOCITY);
+            ? Math.abs(velocityY)
+            : Math.abs(velocityX);
+        // Convert velocity to dp/s (velocity from gesture is in px/ms)
+        const velocityInDpPerSecond = primaryVelocity * 1000;
+        // Determine if should dismiss based on velocity and distance
+        const isFastFling = velocityInDpPerSecond > significantVelocityThreshold &&
+            primaryTranslation > effectiveThreshold * 0.3;
+        const crossedThreshold = primaryTranslation > effectiveThreshold;
+        const shouldClose = isFastFling || crossedThreshold;
         if (shouldClose) {
-            // Calculate adaptive spring config based on velocity
-            const adaptiveConfig = (0, utils_1.getSpringConfig)(primaryVelocity, reducedMotion, finalSpringConfig);
             const finalTranslation = effectiveDragDirections.toBottom || effectiveDragDirections.toTop
-                ? constants_1.SCREEN_SIZE.height
-                : constants_1.SCREEN_SIZE.width;
+                ? screenHeight
+                : screenWidth;
             if (reducedMotion) {
                 // Use timing animation for reduced motion
-                const duration = constants_1.PHYSICS.REDUCED_MOTION_DURATION;
-                translateY.value = (0, react_native_reanimated_1.withTiming)(effectiveDragDirections.toBottom ? finalTranslation : effectiveDragDirections.toTop ? -finalTranslation : 0, { duration });
-                translateX.value = (0, react_native_reanimated_1.withTiming)(effectiveDragDirections.toRight ? finalTranslation : effectiveDragDirections.toLeft ? -finalTranslation : 0, { duration });
+                const duration = reducedMotionDuration;
+                translateY.value = (0, react_native_reanimated_1.withTiming)(effectiveDragDirections.toBottom
+                    ? finalTranslation
+                    : effectiveDragDirections.toTop
+                        ? -finalTranslation
+                        : 0, { duration });
+                translateX.value = (0, react_native_reanimated_1.withTiming)(effectiveDragDirections.toRight
+                    ? finalTranslation
+                    : effectiveDragDirections.toLeft
+                        ? -finalTranslation
+                        : 0, { duration });
                 opacity.value = (0, react_native_reanimated_1.withTiming)(0, { duration });
                 borderRadius.value = (0, react_native_reanimated_1.withTiming)(0, { duration });
             }
             else {
-                translateY.value = (0, react_native_reanimated_1.withSpring)(effectiveDragDirections.toBottom ? finalTranslation : effectiveDragDirections.toTop ? -finalTranslation : 0, Object.assign({ velocity: velocityY }, adaptiveConfig));
-                translateX.value = (0, react_native_reanimated_1.withSpring)(effectiveDragDirections.toRight ? finalTranslation : effectiveDragDirections.toLeft ? -finalTranslation : 0, Object.assign({ velocity: velocityX }, adaptiveConfig));
+                // For high velocity, add more damping to prevent overshoot
+                const dampingMultiplier = velocityInDpPerSecond > 2000 ? 1.2 : 1.0;
+                const adaptiveConfig = Object.assign(Object.assign({}, finalSpringConfig), { damping: finalSpringConfig.damping * dampingMultiplier });
+                translateY.value = (0, react_native_reanimated_1.withSpring)(effectiveDragDirections.toBottom
+                    ? finalTranslation
+                    : effectiveDragDirections.toTop
+                        ? -finalTranslation
+                        : 0, Object.assign({ velocity: velocityY }, adaptiveConfig));
+                translateX.value = (0, react_native_reanimated_1.withSpring)(effectiveDragDirections.toRight
+                    ? finalTranslation
+                    : effectiveDragDirections.toLeft
+                        ? -finalTranslation
+                        : 0, Object.assign({ velocity: velocityX }, adaptiveConfig));
                 opacity.value = (0, react_native_reanimated_1.withSpring)(0);
                 borderRadius.value = (0, react_native_reanimated_1.withSpring)(0);
             }
@@ -230,8 +257,9 @@ dragDirections = {
             (0, react_native_reanimated_1.runOnJS)(onCloseEnd)();
         }
         else {
-            // Return to original position with adaptive spring
-            const returnConfig = (0, utils_1.getSpringConfig)(primaryVelocity, reducedMotion, finalSpringConfig);
+            // Return to original position
+            const dampingMultiplier = velocityInDpPerSecond > 2000 ? 1.2 : 1.0;
+            const returnConfig = Object.assign(Object.assign({}, finalSpringConfig), { damping: finalSpringConfig.damping * dampingMultiplier });
             translateY.value = (0, react_native_reanimated_1.withSpring)(0, Object.assign({ velocity: velocityY }, returnConfig));
             translateX.value = (0, react_native_reanimated_1.withSpring)(0, Object.assign({ velocity: velocityX }, returnConfig));
             opacity.value = (0, react_native_reanimated_1.withSpring)(1);
@@ -246,7 +274,7 @@ dragDirections = {
             return {};
         const scale = disableSheetContentResizeOnDragDown
             ? 1
-            : (0, react_native_reanimated_1.interpolate)(Math.max(Math.abs(translateY.value), Math.abs(translateX.value)), [0, effectiveDragDirections.toBottom ? constants_1.SCREEN_SIZE.height : constants_1.SCREEN_SIZE.width], resizeType === 'incremental' ? [1.15, 1] : [1, 0.85], react_native_reanimated_1.Extrapolate.CLAMP);
+            : (0, react_native_reanimated_1.interpolate)(Math.max(Math.abs(translateY.value), Math.abs(translateX.value)), [0, effectiveDragDirections.toBottom ? screenHeight : screenWidth], resizeType === 'incremental' ? [1.15, 1] : [1, 0.85], react_native_reanimated_1.Extrapolate.CLAMP);
         return {
             transform: [{ translateY: translateY.value }, { translateX: translateX.value }, { scale }],
             opacity: opacity.value,

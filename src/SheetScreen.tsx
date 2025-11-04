@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react'
-import { StyleSheet, View, Platform, AccessibilityInfo } from 'react-native'
+import { StyleSheet, View, Platform } from 'react-native'
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -15,7 +15,7 @@ import { useSheet } from './SheetProvider'
 import type { SpringConfig, DragDirections } from './types'
 import { ScrollHandler } from './ScrollHandler'
 import { PHYSICS, SCREEN_SIZE, ACCESSIBILITY } from './constants'
-import { useReducedMotion, shouldDismiss, getSpringConfig, calculateVelocity } from './utils'
+import { useReducedMotion } from './utils'
 
 interface Props {
   children: React.ReactNode
@@ -69,10 +69,15 @@ export function SheetScreen({
   const { setScale, resizeType, enableForWeb, currentScale } = useSheet()
   const reducedMotion = useReducedMotion()
 
-  // Use adaptive threshold if not provided
+  // Pre-compute values that will be needed in worklets
   const effectiveThreshold = dragThreshold ?? PHYSICS.ADAPTIVE_DRAG_THRESHOLD
+  const significantVelocityThreshold = PHYSICS.SIGNIFICANT_VELOCITY
+  const screenHeight = SCREEN_SIZE.height
+  const screenWidth = SCREEN_SIZE.width
+  const reducedMotionDuration = PHYSICS.REDUCED_MOTION_DURATION
+  const minOpacity = ACCESSIBILITY.PREFER_CROSS_FADE_THRESHOLD
 
-  // Use optimized spring config based on motion preferences
+  // Pre-compute spring config
   const baseSpringConfig = springConfig ?? PHYSICS.SPRING_CONFIGS.interactive
   const effectiveSpringConfig: { damping: number; stiffness: number; mass: number } = {
     damping: baseSpringConfig.damping ?? 25,
@@ -80,7 +85,6 @@ export function SheetScreen({
     mass: baseSpringConfig.mass ?? 0.6,
   }
 
-  // Override with reduced motion config if needed
   const finalSpringConfig = reducedMotion
     ? PHYSICS.SPRING_CONFIGS.reducedMotion
     : effectiveSpringConfig
@@ -216,8 +220,7 @@ export function SheetScreen({
           }
 
           const progress = Math.min(
-            translation /
-              (effectiveDragDirections.toBottom ? SCREEN_SIZE.height : SCREEN_SIZE.width),
+            translation / (effectiveDragDirections.toBottom ? screenHeight : screenWidth),
             1
           )
 
@@ -232,9 +235,9 @@ export function SheetScreen({
           if (opacityOnGestureMove) {
             // Use 70% minimum opacity to maintain context (progressive disclosure best practice)
             opacity.value = interpolate(
-              progress * SCREEN_SIZE.height,
-              [0, SCREEN_SIZE.height * 0.5],
-              [1, ACCESSIBILITY.PREFER_CROSS_FADE_THRESHOLD],
+              progress * screenHeight,
+              [0, screenHeight * 0.5],
+              [1, minOpacity],
               Extrapolate.CLAMP
             )
           }
@@ -268,7 +271,7 @@ export function SheetScreen({
             return
           }
 
-          // Use improved velocity-aware dismiss logic
+          // Calculate primary translation and velocity
           const primaryTranslation =
             effectiveDragDirections.toBottom || effectiveDragDirections.toTop
               ? Math.abs(translationY)
@@ -276,32 +279,28 @@ export function SheetScreen({
 
           const primaryVelocity =
             effectiveDragDirections.toBottom || effectiveDragDirections.toTop
-              ? velocityY
-              : velocityX
+              ? Math.abs(velocityY)
+              : Math.abs(velocityX)
 
-          const shouldClose = shouldDismiss(
-            primaryTranslation,
-            primaryVelocity,
-            effectiveThreshold,
-            PHYSICS.SIGNIFICANT_VELOCITY
-          )
+          // Convert velocity to dp/s (velocity from gesture is in px/ms)
+          const velocityInDpPerSecond = primaryVelocity * 1000
+
+          // Determine if should dismiss based on velocity and distance
+          const isFastFling =
+            velocityInDpPerSecond > significantVelocityThreshold &&
+            primaryTranslation > effectiveThreshold * 0.3
+          const crossedThreshold = primaryTranslation > effectiveThreshold
+          const shouldClose = isFastFling || crossedThreshold
 
           if (shouldClose) {
-            // Calculate adaptive spring config based on velocity
-            const adaptiveConfig = getSpringConfig(
-              primaryVelocity,
-              reducedMotion,
-              finalSpringConfig
-            )
-
             const finalTranslation =
               effectiveDragDirections.toBottom || effectiveDragDirections.toTop
-                ? SCREEN_SIZE.height
-                : SCREEN_SIZE.width
+                ? screenHeight
+                : screenWidth
 
             if (reducedMotion) {
               // Use timing animation for reduced motion
-              const duration = PHYSICS.REDUCED_MOTION_DURATION
+              const duration = reducedMotionDuration
               translateY.value = withTiming(
                 effectiveDragDirections.toBottom
                   ? finalTranslation
@@ -321,6 +320,13 @@ export function SheetScreen({
               opacity.value = withTiming(0, { duration })
               borderRadius.value = withTiming(0, { duration })
             } else {
+              // For high velocity, add more damping to prevent overshoot
+              const dampingMultiplier = velocityInDpPerSecond > 2000 ? 1.2 : 1.0
+              const adaptiveConfig = {
+                ...finalSpringConfig,
+                damping: finalSpringConfig.damping * dampingMultiplier,
+              }
+
               translateY.value = withSpring(
                 effectiveDragDirections.toBottom
                   ? finalTranslation
@@ -352,8 +358,12 @@ export function SheetScreen({
             }
             runOnJS(onCloseEnd)()
           } else {
-            // Return to original position with adaptive spring
-            const returnConfig = getSpringConfig(primaryVelocity, reducedMotion, finalSpringConfig)
+            // Return to original position
+            const dampingMultiplier = velocityInDpPerSecond > 2000 ? 1.2 : 1.0
+            const returnConfig = {
+              ...finalSpringConfig,
+              damping: finalSpringConfig.damping * dampingMultiplier,
+            }
 
             translateY.value = withSpring(0, {
               velocity: velocityY,
@@ -380,7 +390,7 @@ export function SheetScreen({
       ? 1
       : interpolate(
           Math.max(Math.abs(translateY.value), Math.abs(translateX.value)),
-          [0, effectiveDragDirections.toBottom ? SCREEN_SIZE.height : SCREEN_SIZE.width],
+          [0, effectiveDragDirections.toBottom ? screenHeight : screenWidth],
           resizeType === 'incremental' ? [1.15, 1] : [1, 0.85],
           Extrapolate.CLAMP
         )
