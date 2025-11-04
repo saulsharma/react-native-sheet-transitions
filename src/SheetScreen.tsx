@@ -72,13 +72,14 @@ export function SheetScreen({
   disableRootScale = false,
   disableSheetContentResizeOnDragDown = false,
 }: Props) {
-  const { setScale, resizeType, enableForWeb } = useSheet()
+  const { setScale, resizeType, enableForWeb, currentScale } = useSheet()
   const translateY = useSharedValue(0)
   const translateX = useSharedValue(0)
   const opacity = useSharedValue(1)
   const borderRadius = useSharedValue(initialBorderRadius)
   const hasPassedThreshold = useSharedValue(false)
   const isMounted = useSharedValue(true)
+  const previousScale = useSharedValue(1)
   const scrollState = useSharedValue({
     isAtTop: true,
     isAtBottom: false,
@@ -117,13 +118,18 @@ export function SheetScreen({
       return
     }
 
+    // Save the current scale before changing it
+    previousScale.value = currentScale.value
+
     const initialScale = resizeType === 'incremental' ? 1.15 : scaleFactor
     if (onOpenStart) onOpenStart()
     setScale(initialScale)
     setTimeout(() => {
       if (onOpenEnd) onOpenEnd()
     }, 300)
-    return () => setScale(1)
+
+    // Restore the previous scale when closing
+    return () => setScale(previousScale.value)
   }, [scaleFactor, resizeType, shouldEnableScale])
 
   const effectiveDragDirections = React.useMemo(

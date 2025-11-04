@@ -41,6 +41,7 @@ const react_native_reanimated_1 = __importStar(require("react-native-reanimated"
 const SheetContext = (0, react_1.createContext)(null);
 function SheetProvider({ children, resizeType = 'decremental', enableForWeb = false, }) {
     const scale = (0, react_native_reanimated_1.useSharedValue)(1);
+    const currentScale = (0, react_native_reanimated_1.useSharedValue)(1);
     const isMounted = (0, react_native_reanimated_1.useSharedValue)(false);
     (0, react_1.useEffect)(() => {
         // Delay setting isMounted to ensure view is ready
@@ -55,6 +56,7 @@ function SheetProvider({ children, resizeType = 'decremental', enableForWeb = fa
     const setScale = (0, react_1.useCallback)((newScale) => {
         if (!isMounted.value)
             return;
+        currentScale.value = newScale;
         if (react_native_1.Platform.OS === 'android') {
             scale.value = newScale;
             return;
@@ -78,6 +80,7 @@ function SheetProvider({ children, resizeType = 'decremental', enableForWeb = fa
             setScale,
             resizeType,
             enableForWeb: isEnabled,
+            currentScale,
         }}>
       {/* <View style={{ flex: 1, backgroundColor: 'red',
             position: 'absolute',

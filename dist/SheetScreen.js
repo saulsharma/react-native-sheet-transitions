@@ -53,13 +53,14 @@ function SheetScreen({ children, onClose, scaleFactor = 0.83, dragThreshold = 15
     toLeft: false,
     toRight: false,
 }, isScrollable = false, style, opacityOnGestureMove = false, initialBorderRadius = 50, disableSyncScaleOnDragDown = false, customBackground, onOpenStart, onOpenEnd, onCloseStart, onCloseEnd = onClose, onBelowThreshold, disableRootScale = false, disableSheetContentResizeOnDragDown = false, }) {
-    const { setScale, resizeType, enableForWeb } = (0, SheetProvider_1.useSheet)();
+    const { setScale, resizeType, enableForWeb, currentScale } = (0, SheetProvider_1.useSheet)();
     const translateY = (0, react_native_reanimated_1.useSharedValue)(0);
     const translateX = (0, react_native_reanimated_1.useSharedValue)(0);
     const opacity = (0, react_native_reanimated_1.useSharedValue)(1);
     const borderRadius = (0, react_native_reanimated_1.useSharedValue)(initialBorderRadius);
     const hasPassedThreshold = (0, react_native_reanimated_1.useSharedValue)(false);
     const isMounted = (0, react_native_reanimated_1.useSharedValue)(true);
+    const previousScale = (0, react_native_reanimated_1.useSharedValue)(1);
     const scrollState = (0, react_native_reanimated_1.useSharedValue)({
         isAtTop: true,
         isAtBottom: false,
@@ -90,6 +91,8 @@ function SheetScreen({ children, onClose, scaleFactor = 0.83, dragThreshold = 15
             }
             return;
         }
+        // Save the current scale before changing it
+        previousScale.value = currentScale.value;
         const initialScale = resizeType === 'incremental' ? 1.15 : scaleFactor;
         if (onOpenStart)
             onOpenStart();
@@ -98,7 +101,8 @@ function SheetScreen({ children, onClose, scaleFactor = 0.83, dragThreshold = 15
             if (onOpenEnd)
                 onOpenEnd();
         }, 300);
-        return () => setScale(1);
+        // Restore the previous scale when closing
+        return () => setScale(previousScale.value);
     }, [scaleFactor, resizeType, shouldEnableScale]);
     const effectiveDragDirections = react_1.default.useMemo(() => (Object.assign(Object.assign({}, dragDirections), { toTop: isScrollable ? scrollState.value.isAtBottom : dragDirections.toTop, toBottom: isScrollable ? scrollState.value.isAtTop : dragDirections.toBottom })), [dragDirections, isScrollable, scrollState.value]);
     const handleScrollStateChange = (0, react_1.useCallback)((state) => {

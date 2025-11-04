@@ -13,6 +13,7 @@ interface SheetContextType {
   setScale: (scale: number) => void
   resizeType: 'incremental' | 'decremental'
   enableForWeb: boolean
+  currentScale: SharedValue<number>
 }
 
 interface SheetProviderProps {
@@ -29,6 +30,7 @@ export function SheetProvider({
   enableForWeb = false,
 }: SheetProviderProps) {
   const scale = useSharedValue(1)
+  const currentScale = useSharedValue(1)
   const isMounted = useSharedValue(false)
 
   useEffect(() => {
@@ -45,6 +47,8 @@ export function SheetProvider({
 
   const setScale = useCallback((newScale: number) => {
     if (!isMounted.value) return
+
+    currentScale.value = newScale
 
     if (Platform.OS === 'android') {
       scale.value = newScale
@@ -75,6 +79,7 @@ export function SheetProvider({
         setScale,
         resizeType,
         enableForWeb: isEnabled,
+        currentScale,
       }}
     >
       {/* <View style={{ flex: 1, backgroundColor: 'red',

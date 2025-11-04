@@ -5,6 +5,7 @@ interface SheetContextType {
     setScale: (scale: number) => void;
     resizeType: 'incremental' | 'decremental';
     enableForWeb: boolean;
+    currentScale: SharedValue<number>;
 }
 interface SheetProviderProps {
     children: React.ReactNode;
