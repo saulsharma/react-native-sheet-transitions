@@ -22,6 +22,8 @@ interface Props {
     disableRootScale?: boolean;
     disableSheetContentResizeOnDragDown?: boolean;
 }
-export declare function SheetScreen({ children, onClose, scaleFactor, dragThreshold, springConfig, dragDirections, isScrollable, style, opacityOnGestureMove, initialBorderRadius, disableSyncScaleOnDragDown, customBackground, onOpenStart, onOpenEnd, onCloseStart, onCloseEnd, onBelowThreshold, disableRootScale, disableSheetContentResizeOnDragDown, }: Props): React.JSX.Element;
+export declare function SheetScreen({ children, onClose, scaleFactor, dragThreshold, // Now optional - will use adaptive default
+springConfig, // Now optional - will use physics-based default
+dragDirections, isScrollable, style, opacityOnGestureMove, initialBorderRadius, disableSyncScaleOnDragDown, customBackground, onOpenStart, onOpenEnd, onCloseStart, onCloseEnd, onBelowThreshold, disableRootScale, disableSheetContentResizeOnDragDown, }: Props): React.JSX.Element;
 export {};
 //# sourceMappingURL=SheetScreen.d.ts.map
