@@ -40,3 +40,5 @@ example/.expo-shared/
 
 # Husky
 .husky/_
+dist/
+example/bun.lock

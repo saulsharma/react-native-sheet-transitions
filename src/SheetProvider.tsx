@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useCallback, useEffect } from 'react'
-import { Platform } from 'react-native'
+import React, { createContext, useContext, useCallback, useEffect, useState } from 'react'
+import { Platform, View } from 'react-native'
 import Animated, {
   useSharedValue,
   withSpring,
@@ -14,6 +14,8 @@ interface SheetContextType {
   resizeType: 'incremental' | 'decremental'
   enableForWeb: boolean
   currentScale: SharedValue<number>
+  registerOverlay: (id: string, component: React.ReactNode) => void
+  unregisterOverlay: (id: string) => void
 }
 
 interface SheetProviderProps {
@@ -32,6 +34,7 @@ export function SheetProvider({
   const scale = useSharedValue(1)
   const currentScale = useSharedValue(1)
   const isMounted = useSharedValue(false)
+  const [overlays, setOverlays] = useState<Map<string, React.ReactNode>>(new Map())
 
   useEffect(() => {
     // Delay setting isMounted to ensure view is ready
@@ -62,6 +65,18 @@ export function SheetProvider({
     })
   }, [])
 
+  const registerOverlay = useCallback((id: string, component: React.ReactNode) => {
+    setOverlays((prev) => new Map(prev).set(id, component))
+  }, [])
+
+  const unregisterOverlay = useCallback((id: string) => {
+    setOverlays((prev) => {
+      const next = new Map(prev)
+      next.delete(id)
+      return next
+    })
+  }, [])
+
   const animatedStyle = useAnimatedStyle(() => {
     if (!isMounted.value) return {}
 
@@ -80,29 +95,30 @@ export function SheetProvider({
         resizeType,
         enableForWeb: isEnabled,
         currentScale,
+        registerOverlay,
+        unregisterOverlay,
       }}
     >
-      {/* <View style={{ flex: 1, backgroundColor: 'red',
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: -1
-         }}/> */}
+      <View style={{ flex: 1 }}>
+        {/* Scaled content */}
+        <Animated.View
+          style={[
+            {
+              flex: 1,
+              backfaceVisibility: 'hidden',
+            },
+            Platform.OS === 'ios' ? animatedStyle : null,
+          ]}
+          collapsable={false}
+        >
+          {children}
+        </Animated.View>
 
-      <Animated.View
-        style={[
-          {
-            flex: 1,
-            backfaceVisibility: 'hidden',
-          },
-          Platform.OS === 'ios' ? animatedStyle : null,
-        ]}
-        collapsable={false}
-      >
-        {children}
-      </Animated.View>
+        {/* Overlays render here, outside the scaled Animated.View */}
+        {Array.from(overlays.entries()).map(([id, component]) => (
+          <React.Fragment key={id}>{component}</React.Fragment>
+        ))}
+      </View>
     </SheetContext.Provider>
   )
 }

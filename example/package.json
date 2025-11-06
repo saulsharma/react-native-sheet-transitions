@@ -1,7 +1,7 @@
 {
   "name": "example",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
@@ -11,11 +11,17 @@
   },
   "dependencies": {
     "expo": "~54.0.22",
-    "expo-status-bar": "~3.0.8",
+    "expo-blur": "^15.0.7",
+    "expo-constants": "^18.0.10",
+    "expo-linking": "^8.0.8",
+    "expo-router": "^6.0.14",
+    "expo-status-bar": "^3.0.8",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
-    "react-native-reanimated": "~4.1.1"
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "^5.6.2",
+    "react-native-screens": "~4.16.0"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",
