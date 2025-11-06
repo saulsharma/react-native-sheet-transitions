@@ -1,9 +1,3 @@
-::: IEEEkeywords
-mobile UI, gesture-based interaction, animation architecture, React
-Native, cross-platform development, worklet optimization, modal
-transitions, bottom sheets
-:::
-
 # Introduction
 
 Modal presentations and bottom sheets have become ubiquitous UI patterns
